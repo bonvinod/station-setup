@@ -3,47 +3,58 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Station Setup - MXP5 / ITK1</title>
+    <title>Station Mapping - MXP5 / ITK1</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f7fa; color: #333; padding: 20px; }
-        h1 { text-align: center; margin-bottom: 8px; color: #1a73e8; }
-        .subtitle { text-align: center; color: #666; margin-bottom: 24px; font-size: 14px; }
-        .filters { display: flex; gap: 12px; justify-content: center; margin-bottom: 24px; flex-wrap: wrap; }
-        .filters select { padding: 8px 16px; border-radius: 6px; border: 1px solid #ddd; font-size: 14px; background: white; }
-        .task-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px; max-width: 1400px; margin: 0 auto; }
-        .task-card { background: white; border-radius: 10px; padding: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
-        .task-card h3 { font-size: 15px; color: #1a73e8; margin-bottom: 10px; padding-bottom: 8px; border-bottom: 2px solid #e8f0fe; }
-        .ws-list { list-style: none; margin-bottom: 10px; }
-        .ws-list li { display: flex; align-items: center; justify-content: space-between; padding: 6px 10px; margin-bottom: 4px; background: #f0f6ff; border-radius: 6px; font-size: 14px; }
-        .ws-list li .ws-name { font-weight: 500; }
-        .ws-list li .remove-btn { background: none; border: none; color: #e53935; cursor: pointer; font-size: 18px; font-weight: bold; line-height: 1; }
-        .ws-list li .remove-btn:hover { color: #b71c1c; }
-        .add-row { display: flex; gap: 6px; }
-        .add-row input { flex: 1; padding: 7px 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 13px; }
-        .add-row button { padding: 7px 14px; background: #1a73e8; color: white; border: none; border-radius: 6px; font-size: 16px; font-weight: bold; cursor: pointer; }
-        .add-row button:hover { background: #1557b0; }
+        h1 { text-align: center; margin-bottom: 4px; color: #1a73e8; font-size: 24px; }
+        .subtitle { text-align: center; color: #666; margin-bottom: 20px; font-size: 13px; }
+        .filters { display: flex; gap: 12px; justify-content: center; margin-bottom: 20px; flex-wrap: wrap; align-items: center; }
+        .filters select, .filters button { padding: 8px 16px; border-radius: 6px; border: 1px solid #ddd; font-size: 14px; background: white; }
+        .filters button { background: #1a73e8; color: white; border: none; cursor: pointer; font-weight: 600; }
+        .filters button:hover { background: #1557b0; }
+        .filters button.export { background: #4caf50; }
+        .filters button.export:hover { background: #388e3c; }
+        .task-section { max-width: 1200px; margin: 0 auto 24px; background: white; border-radius: 10px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+        .task-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; padding-bottom: 10px; border-bottom: 2px solid #e8f0fe; }
+        .task-header h3 { font-size: 16px; color: #1a73e8; }
+        .task-header .badge { font-size: 11px; background: #e8f0fe; color: #1a73e8; padding: 3px 10px; border-radius: 12px; }
+        .station-table { width: 100%; border-collapse: collapse; font-size: 13px; margin-bottom: 12px; }
+        .station-table th { background: #f8f9fa; padding: 8px 10px; text-align: left; font-weight: 600; color: #555; border-bottom: 2px solid #e0e0e0; }
+        .station-table td { padding: 6px 10px; border-bottom: 1px solid #f0f0f0; }
+        .station-table tr:hover { background: #f8fbff; }
+        .station-table .remove-btn { background: none; border: none; color: #e53935; cursor: pointer; font-size: 16px; font-weight: bold; }
+        .station-table .remove-btn:hover { color: #b71c1c; }
+        .station-table .active-toggle { cursor: pointer; font-size: 16px; }
+        .add-station-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+        .add-station-row input, .add-station-row select { padding: 6px 10px; border: 1px solid #ddd; border-radius: 5px; font-size: 13px; }
+        .add-station-row input.short { width: 100px; }
+        .add-station-row input.medium { width: 140px; }
+        .add-station-row button { padding: 6px 14px; background: #1a73e8; color: white; border: none; border-radius: 5px; font-size: 14px; font-weight: bold; cursor: pointer; }
+        .add-station-row button:hover { background: #1557b0; }
+        .empty-msg { color: #999; font-size: 13px; font-style: italic; }
         .status { position: fixed; bottom: 16px; right: 16px; background: #4caf50; color: white; padding: 8px 16px; border-radius: 20px; font-size: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.2); }
         .status.offline { background: #e53935; }
-        .empty-msg { color: #999; font-size: 13px; font-style: italic; margin-bottom: 8px; }
+        .counter { text-align: center; color: #888; font-size: 12px; margin-bottom: 16px; }
     </style>
 </head>
 <body>
-    <h1>🏭 Station Setup</h1>
-    <p class="subtitle">MXP5 / ITK1 — Workstation per Task</p>
+    <h1>🏭 Station Mapping</h1>
+    <p class="subtitle">MXP5 / ITK1 — Compila le workstation per ogni task del tuo dipartimento</p>
 
     <div class="filters">
         <select id="filterWarehouse">
-            <option value="">Tutti i Warehouse</option>
             <option value="MXP5">MXP5</option>
             <option value="ITK1">ITK1</option>
         </select>
         <select id="filterDept">
-            <option value="">Tutti i Department</option>
+            <option value="">Seleziona Department</option>
         </select>
+        <button class="export" onclick="exportCSV()">📥 Esporta CSV</button>
     </div>
+    <p class="counter" id="counter"></p>
 
-    <div class="task-grid" id="taskGrid"></div>
+    <div id="taskContainer"></div>
     <div class="status" id="statusBadge">🟢 Connesso</div>
 
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -61,7 +72,6 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
-        // Task structure
         const TASKS = {
             "ITK1": {
                 "IB": ["CART BUILDER","CSX SCANNER","DOCKER","PS","RUNNER PT","STOW","UNLOADER GAWRONSKI"],
@@ -77,104 +87,157 @@
         };
 
         let allData = {};
+        let currentListener = null;
 
-        // Listen to realtime changes
-        db.ref('workstations').on('value', (snapshot) => {
-            allData = snapshot.val() || {};
-            renderGrid();
-        });
-
-        // Connection status
-        db.ref('.info/connected').on('value', (snap) => {
-            const badge = document.getElementById('statusBadge');
-            if (snap.val() === true) {
-                badge.textContent = '🟢 Connesso';
-                badge.className = 'status';
-            } else {
-                badge.textContent = '🔴 Offline';
-                badge.className = 'status offline';
-            }
-        });
-
-        // Filters
         const filterWH = document.getElementById('filterWarehouse');
         const filterDept = document.getElementById('filterDept');
 
-        filterWH.addEventListener('change', () => {
-            updateDeptFilter();
-            renderGrid();
-        });
-        filterDept.addEventListener('change', renderGrid);
+        filterWH.addEventListener('change', () => { updateDeptFilter(); detachAndListen(); });
+        filterDept.addEventListener('change', detachAndListen);
 
         function updateDeptFilter() {
             const wh = filterWH.value;
-            filterDept.innerHTML = '<option value="">Tutti i Department</option>';
-            if (wh && TASKS[wh]) {
+            filterDept.innerHTML = '<option value="">Seleziona Department</option>';
+            if (TASKS[wh]) {
                 Object.keys(TASKS[wh]).sort().forEach(dept => {
-                    filterDept.innerHTML += `<option value="${dept}">${dept}</option>`;
-                });
-            } else {
-                const allDepts = new Set();
-                Object.values(TASKS).forEach(wObj => Object.keys(wObj).forEach(d => allDepts.add(d)));
-                [...allDepts].sort().forEach(dept => {
                     filterDept.innerHTML += `<option value="${dept}">${dept}</option>`;
                 });
             }
         }
         updateDeptFilter();
 
-        function renderGrid() {
-            const grid = document.getElementById('taskGrid');
-            grid.innerHTML = '';
-            const whFilter = filterWH.value;
-            const deptFilter = filterDept.value;
-
-            const warehouses = whFilter ? [whFilter] : Object.keys(TASKS).sort();
-            warehouses.forEach(wh => {
-                const depts = deptFilter ? [deptFilter] : Object.keys(TASKS[wh]).sort();
-                depts.forEach(dept => {
-                    if (!TASKS[wh][dept]) return;
-                    TASKS[wh][dept].forEach(task => {
-                        const key = `${wh}__${dept}__${task}`.replace(/[.#$/\[\]]/g, '_');
-                        const wsData = allData[key] || {};
-                        const wsList = Object.entries(wsData).map(([id, val]) => ({id, name: val}));
-
-                        const card = document.createElement('div');
-                        card.className = 'task-card';
-                        card.innerHTML = `
-                            <h3>${task} <span style="font-size:11px;color:#888;font-weight:normal">${wh} • ${dept}</span></h3>
-                            <ul class="ws-list" id="list_${key}">
-                                ${wsList.length === 0 ? '<p class="empty-msg">Nessuna workstation aggiunta</p>' : ''}
-                                ${wsList.map(ws => `
-                                    <li>
-                                        <span class="ws-name">${ws.name}</span>
-                                        <button class="remove-btn" onclick="removeWS('${key}','${ws.id}')" title="Rimuovi">&times;</button>
-                                    </li>
-                                `).join('')}
-                            </ul>
-                            <div class="add-row">
-                                <input type="text" id="input_${key}" placeholder="N° workstation..." onkeydown="if(event.key==='Enter')addWS('${key}')">
-                                <button onclick="addWS('${key}')">+</button>
-                            </div>
-                        `;
-                        grid.appendChild(card);
-                    });
-                });
+        function detachAndListen() {
+            if (currentListener) { db.ref(currentListener).off(); }
+            const wh = filterWH.value;
+            const dept = filterDept.value;
+            const container = document.getElementById('taskContainer');
+            if (!wh || !dept) { container.innerHTML = '<p style="text-align:center;color:#999;margin-top:40px;">Seleziona warehouse e department per iniziare</p>'; return; }
+            const path = `stations/${wh}/${dept.replace(/[.#$/\[\]]/g, '_')}`;
+            currentListener = path;
+            db.ref(path).on('value', (snap) => {
+                allData = snap.val() || {};
+                renderTasks(wh, dept);
             });
         }
 
-        function addWS(key) {
-            const input = document.getElementById('input_' + key);
-            const val = input.value.trim();
-            if (!val) return;
-            db.ref('workstations/' + key).push(val);
-            input.value = '';
+        // Connection status
+        db.ref('.info/connected').on('value', (snap) => {
+            const badge = document.getElementById('statusBadge');
+            if (snap.val() === true) { badge.textContent = '🟢 Connesso'; badge.className = 'status'; }
+            else { badge.textContent = '🔴 Offline'; badge.className = 'status offline'; }
+        });
+
+        function renderTasks(wh, dept) {
+            const container = document.getElementById('taskContainer');
+            const tasks = TASKS[wh][dept] || [];
+            let totalStations = 0;
+            let html = '';
+
+            tasks.forEach(task => {
+                const taskKey = task.replace(/[.#$/\[\]\/]/g, '_');
+                const stations = allData[taskKey] || {};
+                const stationList = Object.entries(stations).map(([id, s]) => ({id, ...s}));
+                stationList.sort((a,b) => (a.priority||99) - (b.priority||99));
+                totalStations += stationList.length;
+
+                html += `<div class="task-section">
+                    <div class="task-header">
+                        <h3>${task}</h3>
+                        <span class="badge">${stationList.length} stazioni</span>
+                    </div>`;
+
+                if (stationList.length > 0) {
+                    html += `<table class="station-table"><tr>
+                        <th>Station ID</th><th>Area</th><th>Line</th><th>Type</th><th>Priority</th><th>Active</th><th></th>
+                    </tr>`;
+                    stationList.forEach(s => {
+                        html += `<tr>
+                            <td><strong>${s.station_id||''}</strong></td>
+                            <td>${s.area||'DEFAULT'}</td>
+                            <td>${s.line||'DEFAULT'}</td>
+                            <td>${s.type||'DEFAULT'}</td>
+                            <td>${s.priority||''}</td>
+                            <td><span class="active-toggle" onclick="toggleActive('${taskKey}','${s.id}',${!(s.active!==false)})">${s.active!==false?'✅':'❌'}</span></td>
+                            <td><button class="remove-btn" onclick="removeStation('${taskKey}','${s.id}')" title="Rimuovi">&times;</button></td>
+                        </tr>`;
+                    });
+                    html += '</table>';
+                } else {
+                    html += '<p class="empty-msg">Nessuna stazione — usa il form sotto per aggiungere</p>';
+                }
+
+                html += `<div class="add-station-row">
+                    <input class="medium" id="sid_${taskKey}" placeholder="Station ID (es. ws-03-01)">
+                    <input class="short" id="area_${taskKey}" placeholder="Area" value="DEFAULT">
+                    <input class="short" id="line_${taskKey}" placeholder="Line" value="DEFAULT">
+                    <input class="short" id="type_${taskKey}" placeholder="Type" value="DEFAULT">
+                    <input class="short" id="prio_${taskKey}" type="number" placeholder="Priority" value="${stationList.length+1}" min="1" style="width:70px">
+                    <button onclick="addStation('${taskKey}')">+ Aggiungi</button>
+                </div></div>`;
+            });
+
+            container.innerHTML = html;
+            document.getElementById('counter').textContent = `${tasks.length} task • ${totalStations} stazioni totali`;
         }
 
-        function removeWS(key, id) {
-            if (confirm('Rimuovere questa workstation?')) {
-                db.ref('workstations/' + key + '/' + id).remove();
-            }
+        function addStation(taskKey) {
+            const sid = document.getElementById('sid_' + taskKey).value.trim();
+            if (!sid) { alert('Inserisci Station ID'); return; }
+            const area = document.getElementById('area_' + taskKey).value.trim() || 'DEFAULT';
+            const line = document.getElementById('line_' + taskKey).value.trim() || 'DEFAULT';
+            const type = document.getElementById('type_' + taskKey).value.trim() || 'DEFAULT';
+            const prio = parseInt(document.getElementById('prio_' + taskKey).value) || 1;
+
+            const wh = filterWH.value;
+            const dept = filterDept.value.replace(/[.#$/\[\]]/g, '_');
+            const path = `stations/${wh}/${dept}/${taskKey}`;
+
+            db.ref(path).push({
+                station_id: sid,
+                area: area,
+                line: line,
+                type: type,
+                priority: prio,
+                active: true
+            });
+            document.getElementById('sid_' + taskKey).value = '';
+        }
+
+        function removeStation(taskKey, id) {
+            if (!confirm('Rimuovere questa stazione?')) return;
+            const wh = filterWH.value;
+            const dept = filterDept.value.replace(/[.#$/\[\]]/g, '_');
+            db.ref(`stations/${wh}/${dept}/${taskKey}/${id}`).remove();
+        }
+
+        function toggleActive(taskKey, id, newVal) {
+            const wh = filterWH.value;
+            const dept = filterDept.value.replace(/[.#$/\[\]]/g, '_');
+            db.ref(`stations/${wh}/${dept}/${taskKey}/${id}/active`).set(newVal);
+        }
+
+        function exportCSV() {
+            const wh = filterWH.value;
+            const dept = filterDept.value;
+            if (!wh || !dept) { alert('Seleziona warehouse e department'); return; }
+            const tasks = TASKS[wh][dept] || [];
+            let csv = 'warehouse_id,task,department,area,station_line,station_type,station_id,priority,active\n';
+
+            tasks.forEach(task => {
+                const taskKey = task.replace(/[.#$/\[\]\/]/g, '_');
+                const stations = allData[taskKey] || {};
+                Object.values(stations).forEach(s => {
+                    csv += `${wh},${task},${dept},${s.area||'DEFAULT'},${s.line||'DEFAULT'},${s.type||'DEFAULT'},${s.station_id||''},${s.priority||1},${s.active!==false}\n`;
+                });
+            });
+
+            const blob = new Blob([csv], {type: 'text/csv'});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `station-mapping-${wh}-${dept}.csv`;
+            a.click();
+            URL.revokeObjectURL(url);
         }
     </script>
 </body>
