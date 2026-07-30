@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Station Setup - MXP5 / ITK1</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f7fa; color: #333; padding: 20px; }
+        h1 { text-align: center; margin-bottom: 8px; color: #1a73e8; }
+        .subtitle { text-align: center; color: #666; margin-bottom: 24px; font-size: 14px; }
+        .filters { display: flex; gap: 12px; justify-content: center; margin-bottom: 24px; flex-wrap: wrap; }
+        .filters select { padding: 8px 16px; border-radius: 6px; border: 1px solid #ddd; font-size: 14px; background: white; }
+        .task-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px; max-width: 1400px; margin: 0 auto; }
+        .task-card { background: white; border-radius: 10px; padding: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+        .task-card h3 { font-size: 15px; color: #1a73e8; margin-bottom: 10px; padding-bottom: 8px; border-bottom: 2px solid #e8f0fe; }
+        .ws-list { list-style: none; margin-bottom: 10px; }
+        .ws-list li { display: flex; align-items: center; justify-content: space-between; padding: 6px 10px; margin-bottom: 4px; background: #f0f6ff; border-radius: 6px; font-size: 14px; }
+        .ws-list li .ws-name { font-weight: 500; }
+        .ws-list li .remove-btn { background: none; border: none; color: #e53935; cursor: pointer; font-size: 18px; font-weight: bold; line-height: 1; }
+        .ws-list li .remove-btn:hover { color: #b71c1c; }
+        .add-row { display: flex; gap: 6px; }
+        .add-row input { flex: 1; padding: 7px 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 13px; }
+        .add-row button { padding: 7px 14px; background: #1a73e8; color: white; border: none; border-radius: 6px; font-size: 16px; font-weight: bold; cursor: pointer; }
+        .add-row button:hover { background: #1557b0; }
+        .status { position: fixed; bottom: 16px; right: 16px; background: #4caf50; color: white; padding: 8px 16px; border-radius: 20px; font-size: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.2); }
+        .status.offline { background: #e53935; }
+        .empty-msg { color: #999; font-size: 13px; font-style: italic; margin-bottom: 8px; }
+    </style>
+</head>
+<body>
+    <h1>🏭 Station Setup</h1>
+    <p class="subtitle">MXP5 / ITK1 — Workstation per Task</p>
+
+    <div class="filters">
+        <select id="filterWarehouse">
+            <option value="">Tutti i Warehouse</option>
+            <option value="MXP5">MXP5</option>
+            <option value="ITK1">ITK1</option>
+        </select>
+        <select id="filterDept">
+            <option value="">Tutti i Department</option>
+        </select>
+    </div>
+
+    <div class="task-grid" id="taskGrid"></div>
+    <div class="status" id="statusBadge">🟢 Connesso</div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyDBDVav4IJ_RbEjQVohzIdBI4sM8tYFFPM",
+            authDomain: "station-setup-mxp5-itk1.firebaseapp.com",
+            databaseURL: "https://station-setup-mxp5-itk1-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "station-setup-mxp5-itk1",
+            storageBucket: "station-setup-mxp5-itk1.firebasestorage.app",
+            messagingSenderId: "344721720577",
+            appId: "1:344721720577:web:158ebd7d3f4949e5af8700"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
+        // Task structure
+        const TASKS = {
+            "ITK1": {
+                "IB": ["CART BUILDER","CSX SCANNER","DOCKER","PS","RUNNER PT","STOW","UNLOADER GAWRONSKI"],
+                "IC-QA-CS": ["Auditor","Cycle Count","ICQA PS","SBC","Simple Bin Count"],
+                "OB": ["SDC CARICO","SDC PALLETIZE","SDC PG","SDC PICK","SDC RUNNER"]
+            },
+            "MXP5": {
+                "CUSTOMER-RETURNS": ["ADD TASK CRADD","AUDIT","CLEAN DECANT","CRET Linea","PS CRET","Primary Grading","REFURB","RUNNER CRET","SORTATION","SPECIALTY","WHD"],
+                "IC-QA-CS": ["Amnesty collection","Cycle count","Damage Gatekeeping","Damage collection","Escalation Specialist","Expiration Audit","IBPS Aging/FUD/TSI","IBPS Receive","IBPS Stow Sweeper","ICQA PS","NOT OB Auditor activity","OB Auditor","Simple Record Count","Simple bin count","Wave BinCheck"],
+                "INBOUND": ["CLERK IB","CUBISCAN","GREEN TEAM","PICK VERNIER + PROC.","PREDITOR IB","PREP RECEIVE","RECEIVE","RUNNER DOCK IB","RUNNER PREP","Runner Stow Cret","SAT","STOW","STOW RUNNER","STOW TSI","VERNIER"],
+                "OUTBOUND": ["CARICO DOCK OB","CARICO TSO","CHIOCCIOLE","CLERK OB","DONATE","DOPPIA","FLAT","LINEA","LIQUIDATION","LTL","MULTI DAMAGE","MULTI MM","PG","PG PACK","PICK","PS-KO","REBIN","REBIN DAMAGE","REFERENT","REMOVE","RTP","RUNNER HRV","RUNNER TOTE","RUNNER TOTE/BOX","RUNNER TSO","RUNNER VRET","RVR","SHIP","SINGLE","SINGLE DAMAGE","VASCHE","VRET PS","WRANGLING AMBASSADOR","WRANGLING DIRETTA","WRANGLING VRET"]
+            }
+        };
+
+        let allData = {};
+
+        // Listen to realtime changes
+        db.ref('workstations').on('value', (snapshot) => {
+            allData = snapshot.val() || {};
+            renderGrid();
+        });
+
+        // Connection status
+        db.ref('.info/connected').on('value', (snap) => {
+            const badge = document.getElementById('statusBadge');
+            if (snap.val() === true) {
+                badge.textContent = '🟢 Connesso';
+                badge.className = 'status';
+            } else {
+                badge.textContent = '🔴 Offline';
+                badge.className = 'status offline';
+            }
+        });
+
+        // Filters
+        const filterWH = document.getElementById('filterWarehouse');
+        const filterDept = document.getElementById('filterDept');
+
+        filterWH.addEventListener('change', () => {
+            updateDeptFilter();
+            renderGrid();
+        });
+        filterDept.addEventListener('change', renderGrid);
+
+        function updateDeptFilter() {
+            const wh = filterWH.value;
+            filterDept.innerHTML = '<option value="">Tutti i Department</option>';
+            if (wh && TASKS[wh]) {
+                Object.keys(TASKS[wh]).sort().forEach(dept => {
+                    filterDept.innerHTML += `<option value="${dept}">${dept}</option>`;
+                });
+            } else {
+                const allDepts = new Set();
+                Object.values(TASKS).forEach(wObj => Object.keys(wObj).forEach(d => allDepts.add(d)));
+                [...allDepts].sort().forEach(dept => {
+                    filterDept.innerHTML += `<option value="${dept}">${dept}</option>`;
+                });
+            }
+        }
+        updateDeptFilter();
+
+        function renderGrid() {
+            const grid = document.getElementById('taskGrid');
+            grid.innerHTML = '';
+            const whFilter = filterWH.value;
+            const deptFilter = filterDept.value;
+
+            const warehouses = whFilter ? [whFilter] : Object.keys(TASKS).sort();
+            warehouses.forEach(wh => {
+                const depts = deptFilter ? [deptFilter] : Object.keys(TASKS[wh]).sort();
+                depts.forEach(dept => {
+                    if (!TASKS[wh][dept]) return;
+                    TASKS[wh][dept].forEach(task => {
+                        const key = `${wh}__${dept}__${task}`.replace(/[.#$/\[\]]/g, '_');
+                        const wsData = allData[key] || {};
+                        const wsList = Object.entries(wsData).map(([id, val]) => ({id, name: val}));
+
+                        const card = document.createElement('div');
+                        card.className = 'task-card';
+                        card.innerHTML = `
+                            <h3>${task} <span style="font-size:11px;color:#888;font-weight:normal">${wh} • ${dept}</span></h3>
+                            <ul class="ws-list" id="list_${key}">
+                                ${wsList.length === 0 ? '<p class="empty-msg">Nessuna workstation aggiunta</p>' : ''}
+                                ${wsList.map(ws => `
+                                    <li>
+                                        <span class="ws-name">${ws.name}</span>
+                                        <button class="remove-btn" onclick="removeWS('${key}','${ws.id}')" title="Rimuovi">&times;</button>
+                                    </li>
+                                `).join('')}
+                            </ul>
+                            <div class="add-row">
+                                <input type="text" id="input_${key}" placeholder="N° workstation..." onkeydown="if(event.key==='Enter')addWS('${key}')">
+                                <button onclick="addWS('${key}')">+</button>
+                            </div>
+                        `;
+                        grid.appendChild(card);
+                    });
+                });
+            });
+        }
+
+        function addWS(key) {
+            const input = document.getElementById('input_' + key);
+            const val = input.value.trim();
+            if (!val) return;
+            db.ref('workstations/' + key).push(val);
+            input.value = '';
+        }
+
+        function removeWS(key, id) {
+            if (confirm('Rimuovere questa workstation?')) {
+                db.ref('workstations/' + key + '/' + id).remove();
+            }
+        }
+    </script>
+</body>
+</html>
